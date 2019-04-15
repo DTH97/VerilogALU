@@ -1,4 +1,3 @@
-
 module Dup_1( in, out1, out2 );
     input wire in;
     output reg out1, out2; 
@@ -171,6 +170,59 @@ module And_1( A, B, out );
     end
 endmodule
 
+module Quick_store( in, out );
+    input wire in;
+    output reg out;
+    
+    initial
+    begin
+        out <= 0; // This initialized our cache memory to all zeros
+    end
+    
+    always @(*) 
+    begin
+        out <= in;
+    end
+endmodule
+
+module Quick_store_8( in, out );
+    input wire[7:0] in;
+    output wire[7:0] out;
+    
+    Quick_store Q0( in[0], out[0] );
+    Quick_store Q1( in[1], out[1] );
+    Quick_store Q2( in[2], out[2] );
+    Quick_store Q3( in[3], out[3] );
+    Quick_store Q4( in[4], out[4] );
+    Quick_store Q5( in[5], out[5] );
+    Quick_store Q6( in[6], out[6] );
+    Quick_store Q7( in[7], out[7] );
+    
+endmodule
+
+module Quick_store_16( in, out );
+    input wire[15:0] in;
+    output wire[15:0] out;
+    
+    Quick_store Q0( in[0], out[0] );
+    Quick_store Q1( in[1], out[1] );
+    Quick_store Q2( in[2], out[2] );
+    Quick_store Q3( in[3], out[3] );
+    Quick_store Q4( in[4], out[4] );
+    Quick_store Q5( in[5], out[5] );
+    Quick_store Q6( in[6], out[6] );
+    Quick_store Q7( in[7], out[7] );
+    Quick_store Q8( in[8], out[8] );
+    Quick_store Q9( in[9], out[9] );
+    Quick_store Q10( in[10], out[10] );
+    Quick_store Q11( in[11], out[11] );
+    Quick_store Q12( in[12], out[12] );
+    Quick_store Q13( in[13], out[13] );
+    Quick_store Q14( in[14], out[14] );
+    Quick_store Q15( in[15], out[15] );
+    
+endmodule
+
 module D_flip_flop( CLK, D, Q, Q_not );
     input wire CLK, D;
     output reg Q;
@@ -180,7 +232,7 @@ module D_flip_flop( CLK, D, Q, Q_not );
     
     initial
     begin
-        Q <= 0; // This initialized our cache memory to all zeros
+        Q <= 0; 
     end
     
     always @(posedge CLK) 
@@ -263,7 +315,6 @@ module TestBench;
 	    end
     end
   
-
     initial begin
     #91
     $finish;
@@ -281,17 +332,17 @@ module Mux_16_1( in, selector, out );
     end
 endmodule
 
-module CacheRegister_16( CLK, data_in, storage_activator, data_out );
-    input wire CLK, storage_activator;
+module CacheRegister_16( data_in, storage_activator, data_out );
+    input wire storage_activator;
     input wire[15:0] data_in;
     output wire[15:0] data_out;
     
-    wire[15:0] FF_in, FF_out, FF_out_not, loopBack;
+    wire[15:0] FF_in, FF_out, loopBack;
     wire[1:0][15:0] mux_in;
     
     Pack_2_16 P0( loopBack, data_in, mux_in );
     Mux_16_1 M0( mux_in, storage_activator, FF_in );
-    D_flip_flop_16 D0( CLK, FF_in, FF_out, FF_out_not );
+    Quick_store_16 Q0( FF_in, FF_out );
     Dup_16 D1( FF_out, data_out, loopBack );
     
 endmodule
@@ -304,7 +355,7 @@ module TestBench;
     reg S;
     wire[15:0] out;
     
-    CacheRegister_16 C( clk, A, S, out );
+    CacheRegister_16 C( A, S, out );
     
     initial begin
         forever
