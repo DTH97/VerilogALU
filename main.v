@@ -1,3 +1,4 @@
+
 module Dup_1( in, out1, out2 );
     input wire in;
     output reg out1, out2; 
@@ -150,6 +151,30 @@ module Or_1( A, B, out );
     end
 endmodule
 
+module Or_8( A, B, out );
+    input wire[7:0] A, B;
+    output wire[7:0] out;
+    
+    Or_1 O0( A[0], B[0], out[0] );
+    Or_1 O1( A[1], B[1], out[1] );
+    Or_1 O2( A[2], B[2], out[2] );
+    Or_1 O3( A[3], B[3], out[3] );
+    Or_1 O4( A[4], B[4], out[4] );
+    Or_1 O5( A[5], B[5], out[5] );
+    Or_1 O6( A[6], B[6], out[6] );
+    Or_1 O7( A[7], B[7], out[7] );
+    
+endmodule
+
+module Or_16( A, B, out );
+    input wire[15:0] A, B;
+    output wire[15:0] out;
+    
+    Or_8 O0( A[7:0], B[7:0], out[15:8] );
+    Or_8 O1( A[15:8], B[15:8], out[15:8] );
+    
+endmodule
+
 module Xor_1( A, B, out );
     input wire A, B;
     output reg out;
@@ -158,6 +183,30 @@ module Xor_1( A, B, out );
     begin
         out = A ^ B;
     end
+endmodule
+
+module Xor_8( A, B, out );
+    input wire[7:0] A, B;
+    output wire[7:0] out;
+    
+    Xor_1 X0( A[0], B[0], out[0] );
+    Xor_1 X1( A[1], B[1], out[1] );
+    Xor_1 X2( A[2], B[2], out[2] );
+    Xor_1 X3( A[3], B[3], out[3] );
+    Xor_1 X4( A[4], B[4], out[4] );
+    Xor_1 X5( A[5], B[5], out[5] );
+    Xor_1 X6( A[6], B[6], out[6] );
+    Xor_1 X7( A[7], B[7], out[7] );
+    
+endmodule
+
+module Xor_16( A, B, out );
+    input wire[15:0] A, B;
+    output wire[15:0] out;
+    
+    Xor_8 X0( A[7:0], B[7:0], out[7:0] );
+    Xor_8 X1( A[15:8], B[15:8], out[15:8] );
+    
 endmodule
 
 module And_1( A, B, out );
@@ -170,13 +219,37 @@ module And_1( A, B, out );
     end
 endmodule
 
+module And_8( A, B, out );
+    input wire[7:0] A, B;
+    output wire[7:0] out;
+    
+    And_1 A0( A[0], B[0], out[0] );
+    And_1 A1( A[1], B[1], out[1] );
+    And_1 A2( A[2], B[2], out[2] );
+    And_1 A3( A[3], B[3], out[3] );
+    And_1 A4( A[4], B[4], out[4] );
+    And_1 A5( A[5], B[5], out[5] );
+    And_1 A6( A[6], B[6], out[6] );
+    And_1 A7( A[7], B[7], out[7] );
+    
+endmodule
+
+module And_16( A, B, out );
+    input wire[15:0] A, B;
+    output wire[15:0] out;
+    
+    And_8 A0( A[7:0], B[7:0], out[7:0] );
+    And_8 A1( A[15:8], B[15:8], out[15:8] );
+    
+endmodule
+
 module Quick_store( in, out );
     input wire in;
     output reg out;
     
     initial
     begin
-        out <= 0; // This initialized our cache memory to all zeros
+        out <= 0; // This initializes our cache memory to all zeros
     end
     
     always @(*) 
@@ -346,8 +419,6 @@ module CacheRegister_16( data_in, storage_activator, data_out );
     Dup_16 D1( FF_out, data_out, loopBack );
     
 endmodule
-    
-
 
 module TestBench;
     reg clk;
