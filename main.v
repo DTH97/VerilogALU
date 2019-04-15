@@ -107,6 +107,251 @@ module Pack_2_16( in0, in1, out );
     end
 endmodule
 
+module Not_1( in, out );
+    input wire in;
+    output reg out;
+
+    always @(*) 
+    begin
+        out = !in;
+    end
+endmodule
+
+module Not_8( in, out );
+    input wire[7:0] in;
+    output wire[7:0] out;
+
+    Not_1 N0( in[0], out[0] );
+    Not_1 N1( in[1], out[1] );
+    Not_1 N2( in[2], out[2] );
+    Not_1 N3( in[3], out[3] );
+    Not_1 N4( in[4], out[4] );
+    Not_1 N5( in[5], out[5] );
+    Not_1 N6( in[6], out[6] );
+    Not_1 N7( in[7], out[7] );
+endmodule
+
+module Not_16( in, out );
+    input wire[15:0] in;
+    output wire[15:0] out;
+
+    Not_8 N0( in[7:0], out[7:0] );
+    Not_8 N1( in[15:8], out[15:8] );
+
+endmodule
+
+module Or_1( A, B, out );
+    input wire A, B;
+    output reg out;
+
+    always @(*) 
+    begin
+        out = A | B;
+    end
+endmodule
+
+module Or_8( A, B, out );
+    input wire[7:0] A, B;
+    output wire[7:0] out;
+
+    Or_1 O0( A[0], B[0], out[0] );
+    Or_1 O1( A[1], B[1], out[1] );
+    Or_1 O2( A[2], B[2], out[2] );
+    Or_1 O3( A[3], B[3], out[3] );
+    Or_1 O4( A[4], B[4], out[4] );
+    Or_1 O5( A[5], B[5], out[5] );
+    Or_1 O6( A[6], B[6], out[6] );
+    Or_1 O7( A[7], B[7], out[7] );
+
+endmodule
+
+module Or_16( A, B, out );
+    input wire[15:0] A, B;
+    output wire[15:0] out;
+
+    Or_8 O0( A[7:0], B[7:0], out[15:8] );
+    Or_8 O1( A[15:8], B[15:8], out[15:8] );
+
+endmodule
+
+module Xor_1( A, B, out );
+    input wire A, B;
+    output reg out;
+
+    always @(*) 
+    begin
+        out = A ^ B;
+    end
+endmodule
+
+module Xor_8( A, B, out );
+    input wire[7:0] A, B;
+    output wire[7:0] out;
+
+    Xor_1 X0( A[0], B[0], out[0] );
+    Xor_1 X1( A[1], B[1], out[1] );
+    Xor_1 X2( A[2], B[2], out[2] );
+    Xor_1 X3( A[3], B[3], out[3] );
+    Xor_1 X4( A[4], B[4], out[4] );
+    Xor_1 X5( A[5], B[5], out[5] );
+    Xor_1 X6( A[6], B[6], out[6] );
+    Xor_1 X7( A[7], B[7], out[7] );
+
+endmodule
+
+module Xor_16( A, B, out );
+    input wire[15:0] A, B;
+    output wire[15:0] out;
+
+    Xor_8 X0( A[7:0], B[7:0], out[7:0] );
+    Xor_8 X1( A[15:8], B[15:8], out[15:8] );
+
+endmodule
+
+module And_1( A, B, out );
+    input wire A, B;
+    output reg out;
+
+    always @(*) 
+    begin
+        out = A & B;
+    end
+endmodule
+
+module And_8( A, B, out );
+    input wire[7:0] A, B;
+    output wire[7:0] out;
+
+    And_1 A0( A[0], B[0], out[0] );
+    And_1 A1( A[1], B[1], out[1] );
+    And_1 A2( A[2], B[2], out[2] );
+    And_1 A3( A[3], B[3], out[3] );
+    And_1 A4( A[4], B[4], out[4] );
+    And_1 A5( A[5], B[5], out[5] );
+    And_1 A6( A[6], B[6], out[6] );
+    And_1 A7( A[7], B[7], out[7] );
+
+endmodule
+
+module And_16( A, B, out );
+    input wire[15:0] A, B;
+    output wire[15:0] out;
+
+    And_8 A0( A[7:0], B[7:0], out[7:0] );
+    And_8 A1( A[15:8], B[15:8], out[15:8] );
+
+endmodule
+
+module Equals_1( A, B, areEqual );
+    input wire A, B;
+    output wire areEqual;
+    wire different;
+    
+    Xor_1 X0( A, B, different );
+    Not_1 N0( different, areEqual );
+endmodule
+
+module Equals_8( A, B, areEqual );
+    input wire[7:0] A, B;
+    output wire areEqual;
+    wire[7:0] tempEquals;
+    wire[5:0] combinations;
+    
+    Equals_1 E0( A[0], B[0], tempEquals[0] );
+    Equals_1 E1( A[1], B[1], tempEquals[1] );
+    Equals_1 E2( A[2], B[2], tempEquals[2] );
+    Equals_1 E3( A[3], B[3], tempEquals[3] );
+    Equals_1 E4( A[4], B[4], tempEquals[4] );
+    Equals_1 E5( A[5], B[5], tempEquals[5] );
+    Equals_1 E6( A[6], B[6], tempEquals[6] );
+    Equals_1 E7( A[7], B[7], tempEquals[7] );
+    And_1 A0( tempEquals[0], tempEquals[1], combinations[0] );
+    And_1 A1( tempEquals[2], tempEquals[3], combinations[1] );
+    And_1 A2( tempEquals[4], tempEquals[5], combinations[2] );
+    And_1 A3( tempEquals[6], tempEquals[7], combinations[3] );
+    And_1 A4( combinations[0], combinations[1], combinations[4] );
+    And_1 A5( combinations[2], combinations[3], combinations[5] );
+    And_1 A6( combinations[4], combinations[5], areEqual );
+endmodule
+
+module Equals_16( A, B, areEqual );
+    input wire[15:0] A, B;
+    output wire areEqual;
+    wire[1:0] tempEquals;
+    
+    Equals_8 E0( A[7:0], B[7:0], tempEquals[0] );
+    Equals_8 E1( A[15:8], B[15:8], tempEquals[1] );
+    And_1 A0( tempEquals[0], tempEquals[1], areEqual );
+endmodule
+
+module Full_Adder_1( c_in, A, B, S, c_out );
+    input wire c_in, A, B;
+    output wire S, c_out;
+    wire[2:0] temp;
+    
+    Xor_1 X0( A, B, temp[0] );
+    Xor_1 X1( temp[0], c_in, S );
+    And_1 A0( A, B, temp[1] );
+    And_1 A1( temp[0], c_in, temp[2] );
+    Or_1 O1( temp[1], temp[2], c_out );
+endmodule
+
+module Full_Adder_8( c_in, A, B, S, c_out );
+    input wire c_in;
+    input wire[7:0] A, B;
+    output wire c_out;
+    output wire[7:0] S;
+    wire[7:1] carry;
+    
+    Full_Adder_1 FA0( c_in, A[0], B[0], S[0], carry[1] );
+    Full_Adder_1 FA1( carry[1], A[1], B[1], S[1], carry[2] );
+    Full_Adder_1 FA2( carry[2], A[2], B[2], S[2], carry[3] );
+    Full_Adder_1 FA3( carry[3], A[3], B[3], S[3], carry[4] );
+    Full_Adder_1 FA4( carry[4], A[4], B[4], S[4], carry[5] );
+    Full_Adder_1 FA5( carry[5], A[5], B[5], S[5], carry[6] );
+    Full_Adder_1 FA6( carry[6], A[6], B[6], S[6], carry[7] );
+    Full_Adder_1 FA7( carry[7], A[7], B[7], S[7], c_out );
+endmodule
+
+module Full_Adder_16( c_in, A, B, S, c_out );
+    input wire c_in;
+    input wire[15:0] A, B;
+    output wire c_out;
+    output wire[15:0] S;
+    wire carry;
+    
+    Full_Adder_8 FA0( c_in, A[7:0], B[7:0], S[7:0], carry );
+    Full_Adder_8 FA1( carry, A[15:8], B[15:8], S[15:8], c_out );
+endmodule
+
+module Add_16( A, B, S, c_out );
+    input wire[15:0] A, B;
+    output wire[15:0] S;
+    output wire c_out;
+    reg c_in;
+    
+    Full_Adder_16 FA0( c_in, A, B, S, c_out );
+    
+    initial begin
+        c_in = 0;
+    end
+endmodule
+
+module Subtract_16( A, B, D, c_out );
+    input wire[15:0] A, B;
+    output wire[15:0] S;
+    output wire c_out;
+    wire[15:0] B_not;
+    reg c_in;
+    
+    Not_16 N0( B, B_not );
+    Full_Adder_16 FA0( c_in, A, B_not, S, c_out );
+    
+    initial begin
+        c_in = 1;
+    end
+endmodule
+
 module Quick_store( in, out );
     input wire in;
     output reg out;
