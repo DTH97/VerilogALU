@@ -1,4 +1,3 @@
-
 module Dup_1( in, out1, out2 );
     input wire in;
     output reg out1, out2; 
@@ -277,22 +276,8 @@ module Quick_store_16( in, out );
     input wire[15:0] in;
     output wire[15:0] out;
     
-    Quick_store Q0( in[0], out[0] );
-    Quick_store Q1( in[1], out[1] );
-    Quick_store Q2( in[2], out[2] );
-    Quick_store Q3( in[3], out[3] );
-    Quick_store Q4( in[4], out[4] );
-    Quick_store Q5( in[5], out[5] );
-    Quick_store Q6( in[6], out[6] );
-    Quick_store Q7( in[7], out[7] );
-    Quick_store Q8( in[8], out[8] );
-    Quick_store Q9( in[9], out[9] );
-    Quick_store Q10( in[10], out[10] );
-    Quick_store Q11( in[11], out[11] );
-    Quick_store Q12( in[12], out[12] );
-    Quick_store Q13( in[13], out[13] );
-    Quick_store Q14( in[14], out[14] );
-    Quick_store Q15( in[15], out[15] );
+    Quick_store_8 Q0( in[7:0], out[7:0] );
+    Quick_store_8 Q1( in[15:8], out[15:8] );
     
 endmodule
 
@@ -367,56 +352,5 @@ module CacheRegister_16( data_in, storage_activator, data_out );
 endmodule
 
 module TestBench;
-    reg clk;
-    reg[15:0] A;
-    reg S;
-    wire[15:0] out;
-    
-    CacheRegister_16 C( A, S, out );
-    
-    initial begin
-        forever
-            begin
-	  
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 0; S = 0;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 1; S = 0;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 2; S = 0;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 3; S = 1;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 4; S = 0;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 5; S = 1;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 6; S = 0;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 7; S = 1;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 8; S = 1;
-        		#5 clk = 0 ;
-        		#5 clk = 1 ; A = 9; S = 0;
-        		
-		
-            end
-    end
-    
-    initial begin
-        #11
-	    $display("+-----+------------------+---+------------------+");	
-        $display("| CLK |       A[0]       | S |       out        |");
-	    $display("+-----+------------------+---+------------------+");
-	forever
-        begin
-	        #5	$display("|  %b  | %16b | %b | %16b |", clk, A , S, out);		
-	    end
-    end
-  
 
-    initial begin
-    #101
-    $finish;
-    end
 endmodule
