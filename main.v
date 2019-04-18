@@ -370,7 +370,7 @@ module Subtract_16( A, B, D, c_out );
     end
 endmodule
 
-module Multiply_16(A, B, P);
+/*module Multiply_16(A, B, P);
 	input wire[15:0] A, B;
 	output reg[31:0] P;
 	integer i;
@@ -384,10 +384,10 @@ module Multiply_16(A, B, P);
 					P += (A<<i);
 					
 	end
-endmodule 
+endmodule*/
 
 
-module Multiply16(A,B,P) ;
+module Multiply_16(A,B,P) ;
   input [15:0] A, B ;
   output [31:0] P ;
   
