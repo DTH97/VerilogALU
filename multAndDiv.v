@@ -48,7 +48,7 @@ module Multiply_16(A,B,P) ;
   	 
 endmodule
 
-module Divide_by_16(A, B, Quotient);
+module Divide_16(A, B, Quotient);
 	input [15:0] A, B;
 	output wire [15:0] Quotient;
 	
