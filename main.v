@@ -463,10 +463,22 @@ module Divide_16(A, B, Quotient, div_by_zero_error);
 	input [15:0] A, B;
 	output wire [15:0] Quotient;
 	output wire div_by_zero_error;
+    reg[1:0][15:0] data;
+    wire selector, error;
 	
-	Equals_zero_16 EZ( B, div_by_zero_error );
+	Equals_zero_16 EZ( B, error );
+    Dup_1 D0( error, selector, div_by_zero_error );
+    Mux_16_1 M0( data, selector, Quotient );
 	
-	assign Quotient = A / B;
+	initial
+        begin
+            data[1] = 0;
+        end
+
+    always @(*)
+        begin
+            data[0] = A / B;
+        end
 endmodule
 
 module Left_shift_8( in, data_in, data_out, out );
