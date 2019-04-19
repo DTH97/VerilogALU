@@ -23,7 +23,7 @@ module Identity_16( in, out );
     output wire[15:0] out;
     
     Identity_8 I0( in[7:0], out[7:0] );
-    Identity_8 I1( in[15:8], out[7:0] );
+    Identity_8 I1( in[15:8], out[15:8] );
 endmodule
 
 module Dup_1( in, out1, out2 );
