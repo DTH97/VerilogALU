@@ -1,3 +1,13 @@
+module Identity_1( in, out );
+    input wire in;
+    output reg out;
+    
+    always @(*)
+        begin
+            out = in;
+        end
+endmodule
+
 module Identity_8( in, out );
     input wire[7:0] in;
     output reg[7:0] out;
@@ -46,6 +56,17 @@ module Dup_16( in, out1, out2 );
     
     Dup_8 D0( in[7:0], out1[7:0], out2[7:0] );
     Dup_8 D1( in[15:8], out1[15:8], out2[15:8] );
+endmodule
+
+module Pad_zero_left_2_8( in, out );
+    input wire[1:0] in;
+    output reg[7:0] out;
+    
+    always @(*)
+        begin
+            out = 0;
+            out[1:0] = in;
+        end
 endmodule
 
 module Pack_2_1( in0, in1, out);
@@ -269,27 +290,38 @@ module Equals_1( A, B, areEqual );
     Not_1 N0( different, areEqual );
 endmodule
 
+module Equals_zero_8( A, isZero );
+    input wire[7:0] A;
+    output wire isZero;
+    wire[6:0] carry;
+
+    Or_1 O0( A[0], A[1], carry[0] );
+    Or_1 O1( A[2], A[3], carry[1] );
+    Or_1 O2( A[4], A[5], carry[2] );
+    Or_1 O3( A[6], A[7], carry[3] );
+    Or_1 O4( carry[0], carry[1], carry[4] );
+    Or_1 O5( carry[2], carry[3], carry[5] );
+    Or_1 O6( carry[4], carry[5], carry[6] );
+    Not_1 N0( carry[6], isZero );
+endmodule
+
+module Equals_zero_16( A, isZero );
+    input wire[15:0] A;
+    output wire isZero;
+    wire[1:0] carry;
+
+    Equals_zero_8 E0( A[7:0], carry[0] );
+    Equals_zero_8 E1( A[15:8], carry[1] );
+    And_1 A0( carry[0], carry[1], isZero );
+endmodule
+
 module Equals_8( A, B, areEqual );
     input wire[7:0] A, B;
     output wire areEqual;
     wire[7:0] tempEquals;
-    wire[5:0] combinations;
     
-    Equals_1 E0( A[0], B[0], tempEquals[0] );
-    Equals_1 E1( A[1], B[1], tempEquals[1] );
-    Equals_1 E2( A[2], B[2], tempEquals[2] );
-    Equals_1 E3( A[3], B[3], tempEquals[3] );
-    Equals_1 E4( A[4], B[4], tempEquals[4] );
-    Equals_1 E5( A[5], B[5], tempEquals[5] );
-    Equals_1 E6( A[6], B[6], tempEquals[6] );
-    Equals_1 E7( A[7], B[7], tempEquals[7] );
-    And_1 A0( tempEquals[0], tempEquals[1], combinations[0] );
-    And_1 A1( tempEquals[2], tempEquals[3], combinations[1] );
-    And_1 A2( tempEquals[4], tempEquals[5], combinations[2] );
-    And_1 A3( tempEquals[6], tempEquals[7], combinations[3] );
-    And_1 A4( combinations[0], combinations[1], combinations[4] );
-    And_1 A5( combinations[2], combinations[3], combinations[5] );
-    And_1 A6( combinations[4], combinations[5], areEqual );
+    Xor_8 X0( A, B, tempEquals );
+    Equals_zero_8 E0( tempEquals, areEqual );
 endmodule
 
 module Equals_16( A, B, areEqual );
@@ -370,26 +402,12 @@ module Subtract_16( A, B, D, c_out );
     end
 endmodule
 
-/*module Multiply_16(A, B, P);
-	input wire[15:0] A, B;
-	output reg[31:0] P;
-	integer i;
-	
-	always @(A or B)
-		begin 
-			P = 0;
-		
-			for (i=0; i<16; i++)
-				if (B[i] == 1'b1)
-					P += (A<<i);
-					
-	end
-endmodule*/
-
-
-module Multiply_16(A,B,P) ;
-  input [15:0] A, B ;
-  output [31:0] P ;
+module Multiply_16(A,B,P, overflow) ;
+  input wire[15:0] A, B ;
+  output reg[15:0] P ;
+  output wire overflow;
+  reg[15:0] upper;
+  wire not_overflow;
   
   // form partial products 
   wire [15:0] pp0 = A & {16{B[0]}} ;
@@ -415,26 +433,40 @@ module Multiply_16(A,B,P) ;
   wire [15:0] s1, s2, s3, s4, s5, s6, s7, s8, s9;
   wire [15:0] s10, s11, s12, s13, s14, s15;
   
-  Full_Adder_16 #(16) add1(1'B0, pp1, {1'B0,pp0[15:1]}, s1, cout_1);
-  Full_Adder_16 #(16) add2(1'b0, pp2, {cout_1,s1[15:1]}, s2, cout_2);
-  Full_Adder_16 #(16) add3(1'b0, pp3, {cout_2,s2[15:1]}, s3, cout_3);
-  Full_Adder_16 #(16) add4(1'B0, pp4, {cout_3,s3[15:1]}, s4, cout_4);
-  Full_Adder_16 #(16) add5(1'b0, pp5, {cout_4,s4[15:1]}, s5, cout_5);
-  Full_Adder_16 #(16) add6(1'b0, pp6, {cout_5,s5[15:1]}, s6, cout_6);
-  Full_Adder_16 #(16) add7(1'b0, pp7, {cout_6,s6[15:1]}, s7, cout_7);
-  Full_Adder_16 #(16) add8(1'b0, pp8, {cout_7,s7[15:1]}, s8, cout_8);
-  Full_Adder_16 #(16) add9(1'b0, pp9, {cout_8,s8[15:1]}, s9, cout_9);
-  Full_Adder_16 #(16) add10(1'b0, pp10, {cout_9,s9[15:1]}, s10, cout_10);
-  Full_Adder_16 #(16) add11(1'b0, pp11, {cout_10,s10[15:1]}, s11, cout_11);
-  Full_Adder_16 #(16) add12(1'b0, pp12, {cout_11,s11[15:1]}, s12, cout_12);
-  Full_Adder_16 #(16) add13(1'b0, pp13, {cout_12,s12[15:1]}, s13, cout_13);
-  Full_Adder_16 #(16) add14(1'b0, pp14, {cout_13,s13[15:1]}, s14, cout_14);
-  Full_Adder_16 #(16) add15(1'b0, pp15, {cout_14,s14[15:1]}, s15, cout_15);
+  Full_Adder_16 add1(1'B0, pp1, {1'B0,pp0[15:1]}, s1, cout_1);
+  Full_Adder_16 add2(1'b0, pp2, {cout_1,s1[15:1]}, s2, cout_2);
+  Full_Adder_16 add3(1'b0, pp3, {cout_2,s2[15:1]}, s3, cout_3);
+  Full_Adder_16 add4(1'B0, pp4, {cout_3,s3[15:1]}, s4, cout_4);
+  Full_Adder_16 add5(1'b0, pp5, {cout_4,s4[15:1]}, s5, cout_5);
+  Full_Adder_16 add6(1'b0, pp6, {cout_5,s5[15:1]}, s6, cout_6);
+  Full_Adder_16 add7(1'b0, pp7, {cout_6,s6[15:1]}, s7, cout_7);
+  Full_Adder_16 add8(1'b0, pp8, {cout_7,s7[15:1]}, s8, cout_8);
+  Full_Adder_16 add9(1'b0, pp9, {cout_8,s8[15:1]}, s9, cout_9);
+  Full_Adder_16 add10(1'b0, pp10, {cout_9,s9[15:1]}, s10, cout_10);
+  Full_Adder_16 add11(1'b0, pp11, {cout_10,s10[15:1]}, s11, cout_11);
+  Full_Adder_16 add12(1'b0, pp12, {cout_11,s11[15:1]}, s12, cout_12);
+  Full_Adder_16 add13(1'b0, pp13, {cout_12,s12[15:1]}, s13, cout_13);
+  Full_Adder_16 add14(1'b0, pp14, {cout_13,s13[15:1]}, s14, cout_14);
+  Full_Adder_16 add15(1'b0, pp15, {cout_14,s14[15:1]}, s15, cout_15);
+  Equals_zero_16 EZ( upper, not_overflow );
+  Not_1 N0( not_overflow, overflow );
   
   // collect the result
-  assign P = {cout_15, s15, s14[0], s13[0], s12[0], s11[0], s10[0], s9[0],
-  	 s8[0], s7[0], s6[0], s5[0], s4[0], s3[0], s2[0], s1[0], pp0[0]} ;
-  	 
+  always @(*)
+    begin
+      upper = {cout_15, s15[15:1]};
+      P = {s15[0], s14[0], s13[0], s12[0], s11[0], s10[0], s9[0], s8[0], s7[0], s6[0], s5[0], s4[0], s3[0], s2[0], s1[0], pp0[0]} ;
+    end
+endmodule
+
+module Divide_16(A, B, Quotient, div_by_zero_error);
+	input [15:0] A, B;
+	output wire [15:0] Quotient;
+	output wire div_by_zero_error;
+	
+	Equals_zero_16 EZ( B, div_by_zero_error );
+	
+	assign Quotient = A / B;
 endmodule
 
 module Left_shift_8( in, data_in, data_out, out );
@@ -782,11 +814,158 @@ module Quick_store_16( in, out );
     
 endmodule
 
+module Pos_D_flip_flop( CLK, D, Q);
+    input wire CLK, D;
+    output reg Q;
+
+    initial
+    begin
+        Q <= 0;
+    end
+
+    always @(posedge CLK) 
+    begin
+        Q <= D;
+    end
+endmodule
+
+module Pos_D_flip_flop_8( CLK, D, Q);
+    input wire CLK;
+    input wire[7:0] D;
+    output wire[7:0] Q;
+
+    Pos_D_flip_flop D0( CLK, D[0], Q[0] );
+    Pos_D_flip_flop D1( CLK, D[1], Q[1] );
+    Pos_D_flip_flop D2( CLK, D[2], Q[2] );
+    Pos_D_flip_flop D3( CLK, D[3], Q[3] );
+    Pos_D_flip_flop D4( CLK, D[4], Q[4] );
+    Pos_D_flip_flop D5( CLK, D[5], Q[5] );
+    Pos_D_flip_flop D6( CLK, D[6], Q[6] );
+    Pos_D_flip_flop D7( CLK, D[7], Q[7] );
+
+endmodule
+
+module Pos_D_flip_flop_16( CLK, D, Q );
+    input wire CLK;
+    input wire[15:0] D;
+    output wire[15:0] Q;
+
+    Pos_D_flip_flop_8 D0( CLK, D[7:0], Q[7:0] );
+    Pos_D_flip_flop_8 D1( CLK, D[15:8], Q[15:8] );
+
+endmodule
+
+module Pos_D_flip_flop_32( CLK, D, Q );
+    input wire CLK;
+    input wire[31:0] D;
+    output wire[31:0] Q;
+
+    Pos_D_flip_flop_16 D0( CLK, D[15:0], Q[15:0] );
+    Pos_D_flip_flop_16 D1( CLK, D[31:16], Q[31:16] );
+
+endmodule
+
+module Neg_D_flip_flop( CLK, D, Q );
+    input wire CLK, D;
+    output reg Q;
+
+    initial
+    begin
+        Q <= 0;
+    end
+
+    always @(negedge CLK) 
+    begin
+        Q <= D;
+    end
+endmodule
+
+module Neg_D_flip_flop_8( CLK, D, Q );
+    input wire CLK;
+    input wire[7:0] D;
+    output wire[7:0] Q;
+
+    Neg_D_flip_flop D0( CLK, D[0], Q[0] );
+    Neg_D_flip_flop D1( CLK, D[1], Q[1] );
+    Neg_D_flip_flop D2( CLK, D[2], Q[2] );
+    Neg_D_flip_flop D3( CLK, D[3], Q[3] );
+    Neg_D_flip_flop D4( CLK, D[4], Q[4] );
+    Neg_D_flip_flop D5( CLK, D[5], Q[5] );
+    Neg_D_flip_flop D6( CLK, D[6], Q[6] );
+    Neg_D_flip_flop D7( CLK, D[7], Q[7] );
+
+endmodule
+
+module Neg_D_flip_flop_16( CLK, D, Q );
+    input wire CLK;
+    input wire[15:0] D;
+    output wire[15:0] Q;
+
+    Neg_D_flip_flop_8 D0( CLK, D[7:0], Q[7:0] );
+    Neg_D_flip_flop_8 D1( CLK, D[15:8], Q[15:8] );
+
+endmodule
+
+module Neg_D_flip_flop_32( CLK, D, Q );
+    input wire CLK;
+    input wire[31:0] D;
+    output wire[31:0] Q;
+
+    Neg_D_flip_flop_16 D0( CLK, D[15:0], Q[15:0] );
+    Neg_D_flip_flop_16 D1( CLK, D[31:16], Q[31:16] );
+
+endmodule
+
+module Error_Latch_1( CLK, reset, set, out );
+    input wire CLK, reset, set;
+    output reg out;
+    wire should_set, not_reset, store;
+
+    Or_1 O( set, out, should_set );
+    Not_1 N( reset, not_reset );
+    And_1 A( should_set, not_reset, store );
+
+    initial
+    begin
+        out <= 0;
+    end
+
+    always @(negedge CLK) 
+    begin
+        out <= store;
+    end
+endmodule
+
+module Error_Latch_8( CLK, reset, set, out );
+    input wire CLK, reset;
+    input wire[7:0] set;
+    output wire[7:0] out;
+
+    Error_Latch_1 EL0( CLK, reset, set[0], out[0] );
+    Error_Latch_1 EL1( CLK, reset, set[1], out[1] );
+    Error_Latch_1 EL2( CLK, reset, set[2], out[2] );
+    Error_Latch_1 EL3( CLK, reset, set[3], out[3] );
+    Error_Latch_1 EL4( CLK, reset, set[4], out[4] );
+    Error_Latch_1 EL5( CLK, reset, set[5], out[5] );
+    Error_Latch_1 EL6( CLK, reset, set[6], out[6] );
+    Error_Latch_1 EL7( CLK, reset, set[7], out[7] );
+endmodule
 
 module Mux_8_4( in, selector, out );
     input wire[15:0][7:0] in;
     input wire[3:0] selector;
     output reg[7:0] out;
+    
+    always @(*) 
+    begin
+        out = in[selector];
+    end
+endmodule
+
+module Mux_16_4( in, selector, out );
+    input wire[15:0][15:0] in;
+    input wire[3:0] selector;
+    output reg[15:0] out;
     
     always @(*) 
     begin
@@ -816,7 +995,7 @@ module Mux_16_1( in, selector, out );
     end
 endmodule
 
-module Mux_16_256( in, selector, out );
+module Mux_16_8( in, selector, out );
     input wire[255:0][15:0] in;
     input wire[7:0] selector;
     output reg[15:0] out;
@@ -845,6 +1024,42 @@ module Decoder_8_256( in, out );
     begin
         out=0;out[in] = 1;
     end
+endmodule
+
+module Conditional_Decoder_8_256( in, any_hot, out );
+    input wire[7:0] in;
+    input wire any_hot;
+    output reg[255:0] out;
+
+    always @(*)
+    begin
+        out=0;out[in] = any_hot;
+    end
+endmodule
+
+module Encoder_16_4( in, out );
+    input wire[15:0] in;
+    output wire[3:0] out;
+    reg[3:0][15:0] masks;
+    wire[3:0][15:0] filtered;
+
+    And_16 A0( in, masks[0], filtered[0] );
+    And_16 A1( in, masks[1], filtered[1] );
+    And_16 A2( in, masks[2], filtered[2] );
+    And_16 A3( in, masks[3], filtered[3] );
+
+    Equals_zero_16 EZ0( filtered[0], out[0] );
+    Equals_zero_16 EZ1( filtered[1], out[1] );
+    Equals_zero_16 EZ2( filtered[2], out[2] );
+    Equals_zero_16 EZ3( filtered[3], out[3] );
+
+    initial
+        begin
+            masks[0] = 16'b0101010101010101;
+            masks[1] = 16'b0011001100110011;
+            masks[2] = 16'b0000111100001111;
+            masks[3] = 16'b0000000011111111;
+        end
 endmodule
 
 module Cache_8_16( inValue, selector, memoryState );
@@ -1211,48 +1426,198 @@ module CacheRegister_16( data_in, storage_activator, data_out );
     
 endmodule
 
-// Test bench
+/*
+nop      = 0000 0000 -> 0
+save     = 0000 0001 -> 1
+add      = 1000 0000 -> 2
+subtract = 1000 0001 -> 3
+multiply = 1000 0010 -> 4
+divide   = 1000 0011 -> 5
+and      = 0100 0000 -> 6
+or       = 0100 0001 -> 7
+not      = 0100 0010 -> 8
+xor      = 0100 0011 -> 9
+lls      = 0100 0100 -> 10
+rls      = 0100 0101 -> 11
+las      = 0100 0110 -> 12
+ras      = 0100 0111 -> 13
+*/
+module Opcode_Converter_ROM( opcode, index );
+    input wire[7:0] opcode;
+    output wire[3:0] index;
+    wire[15:0] one_hot_index;
+    reg[7:0] save_literal, add_literal, subtract_literal, multiply_literal, divide_literal, and_literal, or_literal, not_literal, xor_literal, lls_literal, rls_literal, las_literal, ras_literal, reset_literal, nop_literal;
+    reg zero;
+
+    Equals_8 E0( opcode, nop_literal, one_hot_index[0] );
+    Equals_8 E1( opcode, save_literal, one_hot_index[1] );
+    Equals_8 E2( opcode, add_literal, one_hot_index[2] );
+    Equals_8 E3( opcode, subtract_literal, one_hot_index[3] );
+    Equals_8 E4( opcode, multiply_literal, one_hot_index[4] );
+    Equals_8 E5( opcode, divide_literal, one_hot_index[5] );
+    Equals_8 E6( opcode, and_literal, one_hot_index[6] );
+    Equals_8 E7( opcode, or_literal, one_hot_index[7] );
+    Equals_8 E8( opcode, not_literal, one_hot_index[8] );
+    Equals_8 E9( opcode, xor_literal, one_hot_index[9] );
+    Equals_8 E10( opcode, lls_literal, one_hot_index[10] );
+    Equals_8 E11( opcode, rls_literal, one_hot_index[11] );
+    Equals_8 E12( opcode, las_literal, one_hot_index[12] );
+    Equals_8 E13( opcode, ras_literal, one_hot_index[13] );
+    Identity_1 I0( zero, one_hot_index[14] );
+    Identity_1 I1( zero, one_hot_index[15] );
+
+    Encoder_16_4 E14( one_hot_index, index );
+
+    initial
+        begin
+            nop_literal = 8'b00000000;
+            save_literal = 8'b00000001;
+            add_literal = 8'b10000000;
+            subtract_literal = 8'b10000001;
+            multiply_literal = 8'b10000010;
+            divide_literal = 8'b10000011;
+            and_literal = 8'b01000000;
+            or_literal = 8'b01000001;
+            not_literal = 8'b01000010;
+            xor_literal = 8'b01000011;
+            lls_literal = 8'b01000100;
+            rls_literal = 8'b01000101;
+            las_literal = 8'b01000110;
+            ras_literal = 8'b01000111;
+            zero = 0;
+        end
+endmodule
+
+
+/*
+nop      = 0000 0000 -> 0
+save     = 0000 0001 -> 1
+add      = 1000 0000 -> 2
+subtract = 1000 0001 -> 3
+multiply = 1000 0010 -> 4
+divide   = 1000 0011 -> 5
+and      = 0100 0000 -> 6
+or       = 0100 0001 -> 7
+not      = 0100 0010 -> 8
+xor      = 0100 0011 -> 9
+lls      = 0100 0100 -> 10
+rls      = 0100 0101 -> 11
+las      = 0100 0110 -> 12
+ras      = 0100 0111 -> 13
+reset    = 0000 0010
+*/
+module Process_Operation( CLK, op, out, errors_out );
+    input wire CLK;
+    input wire[31:0] op;
+    output wire[15:0] out;
+    output wire[7:0] errors_out;
+    wire[31:0] operation;
+    wire[15:0][7:0] errors;
+    wire[15:0][15:0] values;
+    wire[1:0][15:0] pre_processed_values;
+    wire[3:0][1:0] temp;
+    wire[3:0] opcode_index;
+    wire[7:0] opcode, A_location, B_location, output_location, out_location, processed_error, error, error_out, error_stall;
+    wire[15:0] A, B, out_value, pre_processed_value, processed_value;
+    wire[255:0] one_hot_output_location;
+    wire[255:0][15:0] memory;
+    reg[15:0] zero;
+    reg[7:0] reset_literal;
+    wire should_reset;
+
+    Pos_D_flip_flop_32 Front_Guard( CLK, op, operation );
+
+    Identity_8 I0( operation[7:0], opcode );
+    Identity_8 I1( operation[15:8], A_location );
+    Identity_8 I2( operation[23:16], B_location );
+    Identity_8 I3( operation[31:24], output_location );
+
+    Opcode_Converter_ROM OCR( opcode, opcode_index );
+    Mux_16_8 MA( memory, A_location, A );
+    Mux_16_8 MB( memory, B_location, B );
+    Cache_265_16 MEM( out_value, one_hot_output_location, memory );
+
+    // Check signatures and decide how errors will work
+    Identity_16 I4( zero, values[0] );
+    Identity_16 I5( operation[23:8], values[1] );
+    Add_16      A0( A, B, values[2], add_error );
+    Subtract_16 S0( A, B, values[3], sub_error );
+    Multiply_16 M0( A, B, values[4], mult_error );
+    Divide_16   D0( A, B, values[5], div_error );
+    And_16      A1( A, B, values[6] );
+    Or_16       O0( A, B, values[7] );
+    Not_16      N0( B, values[8] );
+    Xor_16      X0( A, B, values[9] );
+    Left_Logical_Shift_16 LLS( A, B[4:0], values[10] );
+    Right_Logical_Shift_16 RLS( A, B[4:0], values[11] );
+    Left_Arithmetic_Shift_16 LAS( A, B[4:0], values[12] );
+    Right_Arithmetic_shift_16 RAS( A, B[4:0], values[13]);
+    Identity_16 I6( zero, values[14] );
+    Identity_16 I7( zero, values[15] );
+    
+    Identity_8 I8( zero[7:0], errors[0] );
+    Identity_8 I9( zero[7:0], errors[1] );
+    Pack_2_1 P0( add_error, zero[0], temp[0] );
+    Pack_2_1 P1( sub_error, zero[0], temp[1] );
+    Pack_2_1 P2( mult_error, zero[0], temp[2] );
+    Pack_2_1 P3( zero[0], div_error, temp[3] );
+    Pad_zero_left_2_8 P4( temp[0], errors[2] );
+    Pad_zero_left_2_8 P5( temp[1], errors[3] );
+    Pad_zero_left_2_8 P6( temp[2], errors[4] );
+    Pad_zero_left_2_8 P7( temp[3], errors[5] );
+    Identity_8 I10( zero[7:0], errors[6] );
+    Identity_8 I11( zero[7:0], errors[7] );
+    Identity_8 I12( zero[7:0], errors[8] );
+    Identity_8 I13( zero[7:0], errors[9] );
+    Identity_8 I14( zero[7:0], errors[10] );
+    Identity_8 I15( zero[7:0], errors[11] );
+    Identity_8 I16( zero[7:0], errors[12] );
+    Identity_8 I17( zero[7:0], errors[13] );
+    Identity_8 I18( zero[7:0], errors[14] );
+    Identity_8 I19( zero[7:0], errors[15] );
+    
+    Equals_8 E0( opcode, reset_literal, should_reset );
+
+    Mux_16_4 MO( values, opcode_index, pre_processed_value );
+    Mux_8_4  M1( errors, opcode_index, processed_error );
+    Pack_2_16 P8( zero, pre_processed_value, pre_processed_values );
+    Mux_16_1 M2( pre_processed_values, stall, processed_value );
+
+    Neg_D_flip_flop_16 Value_acc( CLK, processed_value, out_value );
+    Neg_D_flip_flop_8 Location_acc( CLK, output_location, out_location );
+    Error_Latch_8 Error_acc( CLK, should_reset, processed_error, error );
+
+    Dup_8 D1( error, error_out, error_stall );
+    Equals_zero_8 EZ0( error_stall, not_should_stall );
+    Not_1 N1( not_should_stall, should_stall );
+    Equals_zero_8 EZ1( opcode, is_nop );
+    Or_1 O1( should_stall, is_nop, stall );
+    Or_1 O2( CLK, should_reset, temp_store );
+    Or_1 O3( temp_store, stall, not_should_store );
+    Not_1 N2( not_should_store, should_store );
+
+    Conditional_Decoder_8_256 CD( out_location, should_store, one_hot_output_location );
+
+    initial
+        begin
+            zero = 0;
+            reset_literal = 8'b00000010;
+        end
+
+endmodule
 
 module TestBench;
-  reg clk;
-  reg[15:0] A;
-  reg[15:0] B;
-  reg[15:0] a;
-  reg[15:0] b;
-  
-  wire[31:0] product;
-  wire[31:0] product2;
-  wire[31:0] wrongMethod;  
-  wire carr2;
-
-   initial A = 16'b0000010000000000;
-   initial B = 16'b0000010000000000;
-   initial a = 16'b0000000000000010;
-   initial b = 16'b0000000000000010;
-  
-
-  // Don't think it can be implemented this way
-  Multiply_16 multiplier(A, B, wrongMethod);
-  
-  // Book method 
-  Multiply16 second(A,B, product);
-  Multiply16 second1(a,b, product2);
 
 initial begin
  #1
 	
-	$display("A = %15b B = %15b Product = %31b",A,B, product);
-	$display("a = %15b b = %15b Product = %31b",a,b, product2);
-	$display("\nPrevious implementation using Multiply_16");
-	$display("A = %15b B = %15b Product = %31b",A,B, wrongMethod);
+	$display("Compiled Successfully");
 	
 end
 
 ///Shutoff
 initial begin
-#649
+#2
 $finish;
-end  
-  
+end 
 endmodule
-
