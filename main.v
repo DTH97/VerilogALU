@@ -657,6 +657,12 @@ module Right_Logical_Shift_8( in, offset, out );
     Identity_8 I6( wordZero, shifts[14] );
     Identity_8 I7( wordZero, shifts[15] );
     Mux_8_4 M0( shifts, offset, out ); 
+    
+    initial
+        begin
+            zero = 0;
+            wordZero = 0;
+        end
 endmodule
 
 module Right_Logical_Shift_16( in, offset, out );
@@ -701,6 +707,12 @@ module Right_Logical_Shift_16( in, offset, out );
     Identity_16 I14( wordZero, shifts[30] );
     Identity_16 I15( wordZero, shifts[31] );
     Mux_16_5 M0( shifts, offset, out );
+    
+    initial
+        begin
+            zero = 0;
+            wordZero = 0;
+        end
 endmodule
 
 module Right_Arithmetic_Shift_8( in, offset, out );
@@ -737,7 +749,7 @@ module Right_Arithmetic_Shift_8( in, offset, out );
         end
 endmodule
 
-module Right_Arithmetic_shift_16( in, offset, out );
+module Right_Arithmetic_Shift_16( in, offset, out );
     input wire[15:0] in;
     input wire[4:0] offset;
     output wire[15:0] out;
