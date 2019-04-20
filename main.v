@@ -4,7 +4,7 @@ module Identity_1( in, out );
     
     always @(*)
         begin
-            out = in;
+            out <= in;
         end
 endmodule
 
@@ -14,7 +14,7 @@ module Identity_8( in, out );
     
     always @(*)
         begin
-            out = in;
+            out <= in;
         end
 endmodule
 
@@ -31,8 +31,8 @@ module Dup_1( in, out1, out2 );
     output reg out1, out2; 
     
     always @(*) begin
-        out1 = in;
-        out2 = in;
+        out1 <= in;
+        out2 <= in;
     end
 endmodule
 
@@ -64,8 +64,8 @@ module Pad_zero_left_2_8( in, out );
     
     always @(*)
         begin
-            out = 0;
-            out[1:0] = in;
+            out <= 0;
+            out[1:0] <= in;
         end
 endmodule
 
@@ -75,8 +75,8 @@ module Pack_2_1( in0, in1, out);
     
     always @(*)
     begin
-        out[0] = in0;
-        out[1] = in1;
+        out[0] <= in0;
+        out[1] <= in1;
     end
 endmodule
 
@@ -219,7 +219,7 @@ module Xor_1( A, B, out );
 
     always @(*) 
     begin
-        out = A ^ B;
+        out <= A ^ B;
     end
 endmodule
 
@@ -253,7 +253,7 @@ module And_1( A, B, out );
 
     always @(*) 
     begin
-        out = A & B;
+        out <= A & B;
     end
 endmodule
 
@@ -374,28 +374,38 @@ module Full_Adder_16( c_in, A, B, S, c_out );
     Full_Adder_8 FA1( carry, A[15:8], B[15:8], S[15:8], c_out );
 endmodule
 
-module Add_16( A, B, S, c_out );
+module Add_16( A, B, S, overflow_error );
     input wire[15:0] A, B;
     output wire[15:0] S;
-    output wire c_out;
+    output wire overflow_error;
+    wire[8:0] carrys;
     reg c_in;
     
-    Full_Adder_16 FA0( c_in, A, B, S, c_out );
+    Full_Adder_8 FA0( c_in, A[7:0], B[7:0], S[7:0], carry );
+    Full_Adder_1 FA1( carry, A[8], B[8], S[8], carrys[1] );
+    Full_Adder_1 FA2( carrys[1], A[9], B[9], S[9], carrys[2] );
+    Full_Adder_1 FA3( carrys[2], A[10], B[10], S[10], carrys[3] );
+    Full_Adder_1 FA4( carrys[3], A[11], B[11], S[11], carrys[4] );
+    Full_Adder_1 FA5( carrys[4], A[12], B[12], S[12], carrys[5] );
+    Full_Adder_1 FA6( carrys[5], A[13], B[13], S[13], carrys[6] );
+    Full_Adder_1 FA7( carrys[6], A[14], B[14], S[14], carrys[7] );
+    Full_Adder_1 FA8( carrys[7], A[15], B[15], S[15], carrys[8] );
+    Xor_1 X0( carrys[7], carrys[8], overflow_error );
     
     initial begin
         c_in = 0;
     end
 endmodule
 
-module Subtract_16( A, B, D, c_out );
+module Subtract_16( A, B, D, overflow_error );
     input wire[15:0] A, B;
     output wire[15:0] D;
-    output wire c_out;
+    output wire overflow_error;
     wire[15:0] B_not;
     reg c_in;
     
     Not_16 N0( B, B_not );
-    Full_Adder_16 FA0( c_in, A, B_not, D, c_out );
+    Full_Adder_16 FA0( c_in, A, B_not, D, overflow_error );
     
     initial begin
         c_in = 1;
@@ -1494,21 +1504,21 @@ module Opcode_Converter_ROM( opcode, index );
 
     initial
         begin
-            nop_literal = 8'b00000000;
-            save_literal = 8'b00000001;
-            add_literal = 8'b10000000;
-            subtract_literal = 8'b10000001;
-            multiply_literal = 8'b10000010;
-            divide_literal = 8'b10000011;
-            and_literal = 8'b01000000;
-            or_literal = 8'b01000001;
-            not_literal = 8'b01000010;
-            xor_literal = 8'b01000011;
-            lls_literal = 8'b01000100;
-            rls_literal = 8'b01000101;
-            las_literal = 8'b01000110;
-            ras_literal = 8'b01000111;
-            zero = 0;
+            nop_literal <= 8'b00000000;
+            save_literal <= 8'b00000001;
+            add_literal <= 8'b10000000;
+            subtract_literal <= 8'b10000001;
+            multiply_literal <= 8'b10000010;
+            divide_literal <= 8'b10000011;
+            and_literal <= 8'b01000000;
+            or_literal <= 8'b01000001;
+            not_literal <= 8'b01000010;
+            xor_literal <= 8'b01000011;
+            lls_literal <= 8'b01000100;
+            rls_literal <= 8'b01000101;
+            las_literal <= 8'b01000110;
+            ras_literal <= 8'b01000111;
+            zero <= 0;
         end
 endmodule
 
@@ -1575,7 +1585,7 @@ module Process_Operation( CLK, op, out, errors_out );
     Left_Logical_Shift_16 LLS( A, B[4:0], values[10] );
     Right_Logical_Shift_16 RLS( A, B[4:0], values[11] );
     Left_Arithmetic_Shift_16 LAS( A, B[4:0], values[12] );
-    Right_Arithmetic_shift_16 RAS( A, B[4:0], values[13]);
+    Right_Arithmetic_Shift_16 RAS( A, B[4:0], values[13]);
     Identity_16 I6( zero, values[14] );
     Identity_16 I7( zero, values[15] );
     
@@ -1624,24 +1634,88 @@ module Process_Operation( CLK, op, out, errors_out );
 
     initial
         begin
-            zero = 0;
-            reset_literal = 8'b00000010;
+            zero <= 0;
+            reset_literal <= 8'b00000010;
         end
-
 endmodule
 
+/*
+nop      = 0000 0000 -> 0
+save     = 0000 0001 -> 1
+add      = 1000 0000 -> 2
+subtract = 1000 0001 -> 3
+multiply = 1000 0010 -> 4
+divide   = 1000 0011 -> 5
+and      = 0100 0000 -> 6
+or       = 0100 0001 -> 7
+not      = 0100 0010 -> 8
+xor      = 0100 0011 -> 9
+lls      = 0100 0100 -> 10
+rls      = 0100 0101 -> 11
+las      = 0100 0110 -> 12
+ras      = 0100 0111 -> 13
+reset    = 0000 0010
+*/
 module TestBench;
+    reg clk;
+    reg[31:0] op;
+    wire[15:0] out;
+    wire[7:0] errors_out;
+    
+    Process_Operation PO( clk, op, out, errors_out );
+    
+    initial begin
+        forever
+            begin
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b00000001000000000000100000000001; // m[1] = 8
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b00000001000000000000001100000010; // m[2] = 3
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b10000000000000010000001000000011; // m[3] = m[1] add m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b10000001000000010000001000000100; // m[4] = m[1] subtract m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b10000010000000010000001000000101; // m[5] = m[1] mult m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b10000011000000010000001000000110; // m[6] = m[1] div m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000000000000010000001000000111; // m[7] = m[1] and m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000001000000010000001000001000; // m[8] = m[1] or m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000010000000000000001000001001; // m[9] = not m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000011000000010000001000001010; // m[10] = m[1] xor m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000100000000010000001000001011; // m[11] = m[1] lls m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000101000000010000001000001100; // m[12] = m[1] rls m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000110000000010000001000001101; // m[13] = m[1] las m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b01000111000000010000001000001110; // m[14] = m[1] ras m[2]
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b10000011000000010000000000001111; // m[15] = m[1] div m[0] div-by-zero error
+        		#5 clk = 0;
+        		#5 clk = 1;op=32'b00000010000000000000000000000000; // reset
+            end
+    end
+    
+    initial begin
+        #11
+	    $display("+-----+----------------------------------+------------------+-----------+");	
+        $display("| CLK |                  OP              |        out       |   error   |");
+	    $display("+-----+----------------------------------+------------------+-----------+");
+	forever
+        begin
+	        #5	$display("|  %b  | %32b | %8b | %8b |", clk, op, out, errors_out );
+	    end
+    end
+  
 
-initial begin
- #1
-	
-	$display("Compiled Successfully");
-	
-end
-
-///Shutoff
-initial begin
-#2
-$finish;
-end 
+    initial begin
+    #101
+    $finish;
+    end
 endmodule
