@@ -4,7 +4,7 @@ module Identity_1( in, out );
     
     always @(*)
         begin
-            out <= in;
+            out = in;
         end
 endmodule
 
@@ -14,7 +14,7 @@ module Identity_8( in, out );
     
     always @(*)
         begin
-            out <= in;
+            out = in;
         end
 endmodule
 
@@ -854,7 +854,7 @@ module Pos_D_flip_flop( CLK, D, Q);
 
     initial
     begin
-        Q <= 0;
+        #6 Q <= 0;
     end
 
     always @(posedge CLK) 
@@ -905,7 +905,7 @@ module Neg_D_flip_flop( CLK, D, Q );
 
     initial
     begin
-        Q <= 0;
+        #6 Q <= 0;
     end
 
     always @(negedge CLK) 
@@ -961,7 +961,7 @@ module Error_Latch_1( CLK, reset, set, out );
 
     initial
     begin
-        out <= 0;
+        #6 out <= 0;
     end
 
     always @(negedge CLK) 
@@ -1561,15 +1561,15 @@ module Process_Operation( CLK, op, out, errors_out );
 
     Pos_D_flip_flop_32 Front_Guard( CLK, op, operation );
 
-    Identity_8 I0( operation[7:0], opcode );
-    Identity_8 I1( operation[15:8], A_location );
-    Identity_8 I2( operation[23:16], B_location );
-    Identity_8 I3( operation[31:24], output_location );
+    Identity_8 I0( operation[31:24], opcode );
+    Identity_8 I1( operation[23:16], A_location );
+    Identity_8 I2( operation[15:8], B_location );
+    Identity_8 I3( operation[7:0], output_location );
 
     Opcode_Converter_ROM OCR( opcode, opcode_index );
     Mux_16_8 MA( memory, A_location, A );
     Mux_16_8 MB( memory, B_location, B );
-    Cache_265_16 MEM( out_value, one_hot_output_location, memory );
+    Cache_265_16 MEM( out, one_hot_output_location, memory );
 
     // Check signatures and decide how errors will work
     Identity_16 I4( zero, values[0] );
@@ -1612,20 +1612,18 @@ module Process_Operation( CLK, op, out, errors_out );
     
     Equals_8 E0( opcode, reset_literal, should_reset );
 
-    Mux_16_4 MO( values, opcode_index, pre_processed_value );
+    Mux_16_4 MO( values, opcode_index, processed_value );
     Mux_8_4  M1( errors, opcode_index, processed_error );
-    Pack_2_16 P8( zero, pre_processed_value, pre_processed_values );
-    Mux_16_1 M2( pre_processed_values, stall, processed_value );
+    // Pack_2_16 P8( pre_processed_value, zero, processed_values );
+    // Mux_16_1 M2( pre_processed_values, stall, processed_value );
 
-    Neg_D_flip_flop_16 Value_acc( CLK, processed_value, out_value );
+    Neg_D_flip_flop_16 Value_acc( CLK, processed_value, out );
     Neg_D_flip_flop_8 Location_acc( CLK, output_location, out_location );
     Error_Latch_8 Error_acc( CLK, should_reset, processed_error, error );
 
-    Dup_8 D1( error, error_out, error_stall );
+    Dup_8 D1( error, errors_out, error_stall );
     Equals_zero_8 EZ0( error_stall, not_should_stall );
-    Not_1 N1( not_should_stall, should_stall );
-    Equals_zero_8 EZ1( opcode, is_nop );
-    Or_1 O1( should_stall, is_nop, stall );
+    Not_1 N1( not_should_stall, stall );
     Or_1 O2( CLK, should_reset, temp_store );
     Or_1 O3( temp_store, stall, not_should_store );
     Not_1 N2( not_should_store, should_store );
@@ -1665,41 +1663,40 @@ module TestBench;
     Process_Operation PO( clk, op, out, errors_out );
     
     initial begin
-        forever
-            begin
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b00000001000000000000100000000001; // m[1] = 8
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b00000001000000000000001100000010; // m[2] = 3
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b10000000000000010000001000000011; // m[3] = m[1] add m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b10000001000000010000001000000100; // m[4] = m[1] subtract m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b10000010000000010000001000000101; // m[5] = m[1] mult m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b10000011000000010000001000000110; // m[6] = m[1] div m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000000000000010000001000000111; // m[7] = m[1] and m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000001000000010000001000001000; // m[8] = m[1] or m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000010000000000000001000001001; // m[9] = not m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000011000000010000001000001010; // m[10] = m[1] xor m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000100000000010000001000001011; // m[11] = m[1] lls m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000101000000010000001000001100; // m[12] = m[1] rls m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000110000000010000001000001101; // m[13] = m[1] las m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b01000111000000010000001000001110; // m[14] = m[1] ras m[2]
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b10000011000000010000000000001111; // m[15] = m[1] div m[0] div-by-zero error
-        		#5 clk = 0;
-        		#5 clk = 1;op=32'b00000010000000000000000000000000; // reset
-            end
+                
+        		#15 clk = 0;op=32'b00000010000000000000000000000000; // reset
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b00000001000000000000100000000001; // m[1] = 8
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b00000001000000000000001100000010; // m[2] = 3
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b10000000000000010000001000000011; // m[3] = m[1] add m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b10000001000000010000001000000100; // m[4] = m[1] subtract m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b10000010000000010000001000000101; // m[5] = m[1] mult m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b10000011000000010000001000000110; // m[6] = m[1] div m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000000000000010000001000000111; // m[7] = m[1] and m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000001000000010000001000001000; // m[8] = m[1] or m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000010000000000000001000001001; // m[9] = not m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000011000000010000001000001010; // m[10] = m[1] xor m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000100000000010000001000001011; // m[11] = m[1] lls m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000101000000010000001000001100; // m[12] = m[1] rls m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000110000000010000001000001101; // m[13] = m[1] las m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b01000111000000010000001000001110; // m[14] = m[1] ras m[2]
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b10000011000000010000000000001111; // m[15] = m[1] div m[0] div-by-zero error
+        		#5 clk = 1;
+        		#5 clk = 0;op=32'b00000010000000000000000000000000; // reset
     end
     
     initial begin
@@ -1709,13 +1706,13 @@ module TestBench;
 	    $display("+-----+----------------------------------+------------------+-----------+");
 	forever
         begin
-	        #5	$display("|  %b  | %32b | %8b | %8b |", clk, op, out, errors_out );
+	        #5	$display("|  %b  | %32b | %16b | %8b |", clk, op, out, errors_out );
 	    end
     end
   
 
     initial begin
-    #101
+    #201
     $finish;
     end
 endmodule
