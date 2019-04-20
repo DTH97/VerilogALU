@@ -208,7 +208,7 @@ module Or_16( A, B, out );
     input wire[15:0] A, B;
     output wire[15:0] out;
 
-    Or_8 O0( A[7:0], B[7:0], out[15:8] );
+    Or_8 O0( A[7:0], B[7:0], out[7:0] );
     Or_8 O1( A[15:8], B[15:8], out[15:8] );
 
 endmodule
@@ -403,9 +403,20 @@ module Subtract_16( A, B, D, overflow_error );
     output wire overflow_error;
     wire[15:0] B_not;
     reg c_in;
+    wire[8:0] carrys;
     
     Not_16 N0( B, B_not );
-    Full_Adder_16 FA0( c_in, A, B_not, D, overflow_error );
+    Full_Adder_8 FA0( c_in, A[7:0], B_not[7:0], D[7:0], carry );
+    Full_Adder_1 FA1( carry, A[8],B_not[8], D[8], carrys[1] );
+    Full_Adder_1 FA2( carrys[1], A[9], B_not[9], D[9], carrys[2] );
+    Full_Adder_1 FA3( carrys[2], A[10], B_not[10], D[10], carrys[3] );
+    Full_Adder_1 FA4( carrys[3], A[11], B_not[11], D[11], carrys[4] );
+    Full_Adder_1 FA5( carrys[4], A[12], B_not[12], D[12], carrys[5] );
+    Full_Adder_1 FA6( carrys[5], A[13], B_not[13], D[13], carrys[6] );
+    Full_Adder_1 FA7( carrys[6], A[14], B_not[14], D[14], carrys[7] );
+    Full_Adder_1 FA8( carrys[7], A[15], B_not[15], D[15], carrys[8] );
+    Xor_1 X0( carrys[7], carrys[8], overflow_error );
+    //Add_16 FA0( A, B_not, D, overflow_error );
     
     initial begin
         c_in = 1;
@@ -1712,7 +1723,7 @@ module TestBench;
   
 
     initial begin
-    #201
+    #181
     $finish;
     end
 endmodule
