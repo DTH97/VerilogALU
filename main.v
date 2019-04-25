@@ -481,17 +481,17 @@ module Multiply_16(A,B,P, overflow) ;
 endmodule
 
 module Divide_16(A, B, Quotient, div_by_zero_error);
-	input [15:0] A, B;
-	output wire [15:0] Quotient;
-	output wire div_by_zero_error;
+    input [15:0] A, B;
+    output wire [15:0] Quotient;
+    output wire div_by_zero_error;
     reg[1:0][15:0] data;
     wire selector, error;
-	
-	Equals_zero_16 EZ( B, error );
+    
+    Equals_zero_16 EZ( B, error );
     Dup_1 D0( error, selector, div_by_zero_error );
     Mux_16_1 M0( data, selector, Quotient );
-	
-	initial
+    
+    initial
         begin
             data[1] = 0;
         end
@@ -1625,8 +1625,6 @@ module Process_Operation( CLK, op, out, errors_out );
 
     Mux_16_4 MO( values, opcode_index, processed_value );
     Mux_8_4  M1( errors, opcode_index, processed_error );
-    // Pack_2_16 P8( pre_processed_value, zero, processed_values );
-    // Mux_16_1 M2( pre_processed_values, stall, processed_value );
 
     Neg_D_flip_flop_16 Value_acc( CLK, processed_value, out );
     Neg_D_flip_flop_8 Location_acc( CLK, output_location, out_location );
@@ -1674,56 +1672,61 @@ module TestBench;
     Process_Operation PO( clk, op, out, errors_out );
     
     initial begin
-                
-        		#15 clk = 0;op=32'b00000010000000000000000000000000; // reset
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b00000001000000000000100000000001; // m[1] = 8
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b00000001000000000000001100000010; // m[2] = 3
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b10000000000000010000001000000011; // m[3] = m[1] add m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b10000001000000010000001000000100; // m[4] = m[1] subtract m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b10000010000000010000001000000101; // m[5] = m[1] mult m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b10000011000000010000001000000110; // m[6] = m[1] div m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000000000000010000001000000111; // m[7] = m[1] and m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000001000000010000001000001000; // m[8] = m[1] or m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000010000000000000001000001001; // m[9] = not m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000011000000010000001000001010; // m[10] = m[1] xor m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000100000000010000001000001011; // m[11] = m[1] lls m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000101000000010000001000001100; // m[12] = m[1] rls m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000110000000010000001000001101; // m[13] = m[1] las m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b01000111000000010000001000001110; // m[14] = m[1] ras m[2]
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b10000011000000010000000000001111; // m[15] = m[1] div m[0] div-by-zero error
-        		#5 clk = 1;
-        		#5 clk = 0;op=32'b00000010000000000000000000000000; // reset
+                #15 clk = 0;op=32'b00000001000000000000100000000001; // m[1] = 8
+                #5 clk = 1;
+                #5 clk = 0;op=32'b00000001000000000000001100000010; // m[2] = 3
+                #5 clk = 1;
+                #5 clk = 0;op=32'b10000000000000010000001000000011; // m[3] = m[1] add m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b10000001000000010000001000000100; // m[4] = m[1] subtract m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b10000010000000010000001000000101; // m[5] = m[1] mult m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b10000011000000010000001000000110; // m[6] = m[1] div m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000000000000010000001000000111; // m[7] = m[1] and m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000001000000010000001000001000; // m[8] = m[1] or m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000010000000000000001000001001; // m[9] = not m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000011000000010000001000001010; // m[10] = m[1] xor m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000100000000010000001000001011; // m[11] = m[1] lls m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000101000000010000001000001100; // m[12] = m[1] rls m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000110000000010000001000001101; // m[13] = m[1] las m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b01000111000000010000001000001110; // m[14] = m[1] ras m[2]
+                #5 clk = 1;
+                #5 clk = 0;op=32'b10000011000000010000000000001111; // m[15] = m[1] div m[0] div-by-zero error
+                #5 clk = 1;
+                #5 clk = 0;op=32'b00000010000000000000000000000000; // reset
+                #5 clk = 1;
+                #5 clk = 0;op=32'b00000001011111111111111100010000; // m[16] = 65536
+                #5 clk = 1;
+                //#5 clk = 0;op=32'b10000000000100000001000000010001; // m[17] = m[16] add m[16] overflow error
+                #5 clk = 1;
+                #5 clk = 0;op=32'b00000010000000000000000000000000; // reset
+                #5 clk = 1;
+                #5 clk = 0;
     end
     
     initial begin
         #11
-	    $display("+-----+----------------------------------+------------------+-----------+");	
-        $display("| CLK |                  OP              |        out       |   error   |");
-	    $display("+-----+----------------------------------+------------------+-----------+");
-	forever
+        $display("+-----+----------------------------------+------------------+----------+");  
+        $display("| CLK |                  OP              |        out       |   error  |");
+        $display("+-----+----------------------------------+------------------+----------+");
+    forever
         begin
-	        #5	$display("|  %b  | %32b | %16b | %8b |", clk, op, out, errors_out );
-	    end
+            #5  $display("|  %b  | %32b | %16b | %8b |", clk, op, out, errors_out );
+        end
     end
   
 
     initial begin
-    #181
+    #206
     $finish;
     end
 endmodule
